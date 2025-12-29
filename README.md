@@ -206,3 +206,84 @@ sail artisan migrate
 -   `migrate`: `database/migrations` ディレクトリ内にある、まだ実行されていないマイグレーションファイルを順次実行し、データベースのスキーマを更新する Artisan コマンドです。実行済みのマイグレーションは`migrations`テーブルに記録されます。
 
 コマンドが成功すると、データベース内に`todos`テーブルが作成されます。
+
+## モデル設定
+
+Laravel の「**モデル**」は、データベースの特定のテーブル（今回は`todos`テーブル）と対話するための PHP のクラスです。モデルを通じて、データの取得、挿入、更新、削除（CRUD 操作）を行います。
+
+### 📝 ステップ 1: モデルファイルの作成
+
+Artisan コマンドを使用して、`todos`テーブルに対応する`Todo`モデルを作成します。
+
+Sail 環境で以下のコマンドを実行してください。
+
+```bash
+sail artisan make:model Todo
+```
+
+#### 💡 コマンドの構文解説
+
+-   `make:model`: Eloquent モデルクラスを生成するための Artisan コマンドです。
+-   `Todo`: モデルの名前です。Laravel では慣例として、テーブル名（`todos`：複数形）に対して**モデル名は単数形**（`Todo`）で、**パスカルケース**（大文字始まり）で命名します。
+
+コマンドが成功すると、`app/Models` ディレクトリ内に `Todo.php` というファイルが作成されます。
+
+### 📝 ステップ 2: モデルファイルの内容の編集（可変プロパティの設定）
+
+作成された `app/Models/Todo.php` を開き、データベースへのデータ挿入や更新を可能にするために、**`$fillable` プロパティ**を追加・設定します。
+
+#### 💻 `app/Models/Todo.php`
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Todo extends Model
+{
+    use HasFactory;
+
+    /**
+     * 一括割り当て（マスアサインメント）可能な属性
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'title',
+        'is_completed',
+    ];
+}
+
+```
+
+#### 💡 構文の詳細解説
+
+1. **`class Todo extends Model`**
+
+-   `Todo`クラスは、Laravel のデータベース操作の基盤となる`Illuminate\Database\Eloquent\Model`クラスを継承しています。これにより、データベース操作の強力な機能（Eloquent ORM）が利用可能になります。
+
+2. **`protected $fillable = [...]`**
+
+-   `$fillable` は、**マスアサインメント（一括割り当て）**から保護するガード機能（セキュリティ機能）に関連するプロパティです。
+-   **マスアサインメント**とは、ユーザーからの入力データ配列（例: フォームの送信データ）を一度にモデルに流し込んでレコードを作成・更新する操作です。
+-   この機能は便利ですが、悪意のあるユーザーが意図しないカラム（例: ユーザー権限や作成日）を勝手に書き換えるセキュリティリスク（**マスアサインメント脆弱性**）があります。
+-   `$fillable` プロパティにカラム名（`'title'`, `'is_completed'`）をリストアップすることで、「**これらのカラムだけは一括で安全に割り当て可能ですよ**」と Laravel に宣言しています。
+
+### 📝 ステップ 3: モデルとテーブル名の紐付け（確認）
+
+モデル名が単数形（`Todo`）、テーブル名が複数形（`todos`）という Laravel の命名規則に従っているため、Laravel は自動的にこのモデルが`todos`テーブルと紐づいていることを認識します。
+
+もし命名規則に従わないテーブル名を使う場合は、以下のようにモデル内に `$table` プロパティを設定する必要がありますが、**今回は設定不要です**。
+
+```php
+// 今回は不要ですが、参考として
+// protected $table = 'my_todo_list';
+
+```
+
+---
+
+これで、データベースとアプリケーションロジックを仲介する`Todo`モデルが完成しました。
