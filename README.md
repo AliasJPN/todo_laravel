@@ -281,3 +281,56 @@ class Todo extends Model
 // 今回は不要ですが、参考として
 // protected $table = 'my_todo_list';
 ```
+
+## ルーティング (Routing) の設定
+
+Laravelでは、すべてのWebリクエストは `routes/web.php` というファイルで定義されます。ここで「このURLに来たら、このコントローラのこのメソッドを動かす」というルールを書きます。
+
+### 📝 ステップ 1: ルート定義の追加
+
+`routes/web.php` を開き、既存のコードの下に以下のコードを追加してください。
+
+#### 💻 `routes/web.php`
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TodoController; // 後で作成するコントローラをインポート
+
+// TODO一覧表示画面
+Route::get('/', [TodoController::class, 'index'])->name('todos.index');
+
+// TODO登録処理
+Route::post('/todos', [TodoController::class, 'store'])->name('todos.store');
+
+// TODO完了状態の更新処理（更新なのでPATCH/PUTを使用）
+Route::patch('/todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
+
+// TODO削除処理
+Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
+```
+
+#### 💡 構文の詳細解説
+
+1. **`use App\Http\Controllers\TodoController;`**
+    - これから作成する `TodoController` クラスをこのファイル内で使えるように宣言しています。
+
+2. **`Route::get('/', ...)`**
+    - **HTTPメソッド** (`get`, `post`, `patch`, `delete`): 通信の種類を指定します。
+        - `get`: データの取得（画面表示）
+        - `post`: データの新規作成
+        - `patch`: データの一部更新
+        - `delete`: データの削除
+
+    - **URLパス** (`'/'`, `'/todos'`): ブラウザで入力するアドレスです。
+
+    - **`[TodoController::class, 'index']`**:
+        - 第一要素: 実行するコントローラ名
+        - 第二要素: そのコントローラ内にある実行したいメソッド名（関数名）
+
+3. **`->name('todos.index')`**
+    - **ルート名**: このルートに名前を付けます。ビュー（HTML）の中でリンクを作る際、URLを直接書くのではなく `route('todos.index')` のように名前で呼び出せるようになり、URL変更に強い設計になります。
+
+4. **`{todo}` (ルートパラメータ)**
+    - `{todo}` の部分は、更新や削除したいTODOのIDがここに入ることを示します（例: `/todos/1`）。LaravelはこのIDを自動的に読み取って、特定のデータを操作できるようにしてくれます。
