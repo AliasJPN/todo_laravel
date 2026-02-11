@@ -336,3 +336,110 @@ Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.
 
 4. **`{todo}` (ルートパラメータ)**
     - `{todo}` の部分は、更新や削除したいTODOのIDがここに入ることを示します（例: `/todos/1`）。LaravelはこのIDを自動的に読み取って、特定のデータを操作できるようにしてくれます。
+
+## コントローラ (Controller) の作成とロジックの実装
+
+コントローラは、ルーティングから送られてきたリクエストを受け取り、モデルを使ってデータを操作し、最終的に結果をビュー（画面）に渡す役割を担います。
+
+### 📝 ステップ 1: コントローラファイルの作成
+
+Artisan コマンドを使用して、`TodoController` を作成します。
+
+Sail 環境で以下のコマンドを実行してください。
+
+```bash
+sail artisan make:controller TodoController
+```
+
+#### 💡 コマンドの構文解説
+
+- `sail artisan`: **Sail 環境**（Docker コンテナ内）で Artisan（Laravel の CLI ツール）を実行するためのコマンドです。
+- `make:controller`: **コントローラクラス**を生成するための Artisan コマンドです。
+- `TodoController`: 作成するクラス名です。コントローラ名は「リソース名 + Controller」とするのが一般的です。
+
+コマンドが成功すると、`app/Http/Controllers` ディレクトリ内に `TodoController.php` というファイルが作成されます。
+
+### 📝 ステップ 2: コントローラの実装
+
+作成された `app/Http/Controllers/TodoController.php` を開き、以下のコードを記述してください。
+
+#### 💻 `app/Http/Controllers/TodoController.php`
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Todo; // Todoモデルを使えるようにする
+use Illuminate\Http\Request;
+
+class TodoController extends Controller
+{
+    // 1. TODO一覧の表示
+    public function index()
+    {
+        // データベースからすべてのTODOを作成日順に取得
+        $todos = Todo::orderBy('created_at', 'desc')->get();
+
+        // 'todos.index'という名前のビューに、取得したデータを渡して表示
+        return view('todos.index', compact('todos'));
+    }
+
+    // 2. 新しいTODOの保存
+    public function store(Request $request)
+    {
+        // 入力値のチェック（バリデーション）
+        $request->validate([
+            'title' => 'required|max:255', // タイトルは必須、最大255文字
+        ]);
+
+        // データベースに保存
+        Todo::create([
+            'title' => $request->title,
+        ]);
+
+        // 一覧画面にリダイレクト（戻る）
+        return redirect()->route('todos.index');
+    }
+
+    // 3. 完了状態の更新
+    public function update(Todo $todo)
+    {
+        // 現在の完了状態を反転させる (trueならfalse、falseならtrue)
+        $todo->update([
+            'is_completed' => !$todo->is_completed,
+        ]);
+
+        return redirect()->route('todos.index');
+    }
+
+    // 4. TODOの削除
+    public function destroy(Todo $todo)
+    {
+        // データを削除
+        $todo->delete();
+
+        return redirect()->route('todos.index');
+    }
+}
+```
+
+#### 💡 構文の詳細解説
+
+1. **`use App\Models\Todo;`**
+
+- 先ほど作成した `Todo` モデルを呼び出しています。これがないと、データベースとのデータのやり取りができません。
+
+2. **`public function index()`**
+
+- `Todo::orderBy(...)->get()`: Eloquent（エロクアント）という機能を使って、「`todos`テーブルのデータを、`created_at`（作成日時）の降順（`desc`）で並び替えて、すべて取得（`get`）する」というSQLを発行しています。
+- `view('todos.index', compact('todos'))`: `resources/views/todos/index.blade.php` というテンプレートファイルを表示します。`compact('todos')` は、取得したデータを変数 `$todos` としてビューで使えるように渡す便利な書き方です。
+
+3. **`public function store(Request $request)`**
+
+- `Request $request`: ユーザーがフォームに入力して送信したデータを受け取るためのオブジェクトです。
+- `$request->validate([...])`: 入力チェック（バリデーション）です。もし空欄で送信された場合、ここで処理を止めてエラーとともに前の画面に戻してくれます。
+
+4. **`public function update(Todo $todo)` と `public function destroy(Todo $todo)`**
+
+- `Todo $todo` (依存性の注入 / ルートモデルバインディング): `update` や `destroy` メソッドの引数に注目してください。ルーティングで定義した `{todo}`（ID）を元に、Laravelが自動的にデータベースから該当する `Todo` インスタンスを探して、変数 `$todo` に入れてくれます。非常に強力で便利な機能です。
