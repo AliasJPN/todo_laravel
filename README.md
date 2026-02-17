@@ -424,22 +424,138 @@ class TodoController extends Controller
 }
 ```
 
+## ビュー (View) の作成とデータの表示
+
+Laravel のビューは `resources/views` ディレクトリに配置します。
+
+### 📝 ステップ 1: ディレクトリとファイルの作成
+
+まず、ビューを整理するためのフォルダを作成し、その中にファイルを作成します。
+
+`resources/views` の中に `todos` というフォルダを作成してください。
+
+その中に `index.blade.php` という名前でファイルを作成してください。
+
+### 📝 ステップ 2: HTML と Blade 構文の記述
+
+作成した `resources/views/todos/index.blade.php` に、以下のコードを貼り付けてください。
+
+#### 💻 `resources/views/todos/index.blade.php`
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Laravel TODOアプリ</title>
+        <style>
+            body {
+                font-family: sans-serif;
+                margin: 20px;
+            }
+            .todo-item {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            .completed {
+                text-decoration: line-through;
+                color: gray;
+            }
+            form {
+                display: inline;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>📋 TODOリスト</h1>
+
+        <form action="{{ route('todos.store') }}" method="POST">
+            @csrf
+            <input
+                type="text"
+                name="title"
+                placeholder="新しいTODOを入力"
+                required
+            />
+            <button type="submit">追加</button>
+        </form>
+
+        <hr />
+
+        <ul>
+            @foreach ($todos as $todo)
+            <li class="todo-item">
+                <form action="{{ route('todos.update', $todo) }}" method="POST">
+                    @csrf @method('PATCH')
+                    <button type="submit">
+                        {{ $todo->is_completed ? '✅' : '⬜' }}
+                    </button>
+                </form>
+
+                <span class="{{ $todo->is_completed ? 'completed' : '' }}">
+                    {{ $todo->title }}
+                </span>
+
+                <form
+                    action="{{ route('todos.destroy', $todo) }}"
+                    method="POST"
+                    style="margin-left: 10px;"
+                >
+                    @csrf @method('DELETE')
+                    <button
+                        type="submit"
+                        onclick="return confirm('削除しますか？')"
+                    >
+                        削除
+                    </button>
+                </form>
+            </li>
+            @endforeach
+        </ul>
+    </body>
+</html>
+```
+
 #### 💡 構文の詳細解説
 
-1. **`use App\Models\Todo;`**
+1. **`{{ ... }}` (二重波括弧)**
 
-- 先ほど作成した `Todo` モデルを呼び出しています。これがないと、データベースとのデータのやり取りができません。
+- Laravel の Blade 構文で、PHP の変数を表示（エスケープして出力）します。
+- `{{ $todo->title }}` は、PHP の `<?php echo htmlspecialchars($todo->title); ?>` と同じ意味です。
 
-2. **`public function index()`**
+2. **`@csrf`**
 
-- `Todo::orderBy(...)->get()`: Eloquent（エロクアント）という機能を使って、「`todos`テーブルのデータを、`created_at`（作成日時）の降順（`desc`）で並び替えて、すべて取得（`get`）する」というSQLを発行しています。
-- `view('todos.index', compact('todos'))`: `resources/views/todos/index.blade.php` というテンプレートファイルを表示します。`compact('todos')` は、取得したデータを変数 `$todos` としてビューで使えるように渡す便利な書き方です。
+- CSRF保護（クロスサイト・リクエスト・フォージェリ）のためのトークンを自動生成する命令です。Laravel の POST フォームでは、セキュリティ上、このタグを記述することが必須となっています。これがないとエラー（419 Page Expired）になります。
 
-3. **`public function store(Request $request)`**
+3. **`@method('PATCH')` / `@method('DELETE')`**
 
-- `Request $request`: ユーザーがフォームに入力して送信したデータを受け取るためのオブジェクトです。
-- `$request->validate([...])`: 入力チェック（バリデーション）です。もし空欄で送信された場合、ここで処理を止めてエラーとともに前の画面に戻してくれます。
+- ブラウザの HTML フォームは，基本上では GET と POST しかサポートしていません。
+- Laravel のルーティングで設定した PATCH や DELETE を擬似的に送るために、この命令を使って「このリクエストは PATCH ですよ」と Laravel に伝えます。
 
-4. **`public function update(Todo $todo)` と `public function destroy(Todo $todo)`**
+4. **`@foreach ($todos as $todo) ... @endforeach`**
 
-- `Todo $todo` (依存性の注入 / ルートモデルバインディング): `update` や `destroy` メソッドの引数に注目してください。ルーティングで定義した `{todo}`（ID）を元に、Laravelが自動的にデータベースから該当する `Todo` インスタンスを探して、変数 `$todo` に入れてくれます。非常に強力で便利な機能です。
+- コントローラから渡された `$todos` コレクションをループ処理して，1件ずつ表示します。
+
+5. **`{{ route('todos.store') }}`**
+
+- `web.php` で設定したルート名（`name('todos.store')`）から，実際の URL（`/todos`）を自動的に生成します。
+
+### 🎉 完成！動作確認をしましょう
+
+すべての工程が完了しました！ブラウザを開いて，動作を確認してみましょう。
+
+1. **Sail が起動していることを確認**
+
+```bash
+sail up -d
+```
+
+2. **ブラウザで http://localhost にアクセス**
+
+#### 動作確認チェックリスト
+
+- [ ] フォームに文字を入力して「追加」できるか？
+- [ ] 追加した TODO が一覧に表示されるか？
+- [ ] 完了ボタン（⬜）を押すとチェック（✅）がつき，打ち消し線が入るか？
+- [ ] 「削除」ボタンで項目が消えるか？
