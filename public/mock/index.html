@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <title>Laravel TODOアプリ - タスク一覧</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css"
+            rel="stylesheet"
+            type="text/css"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+            rel="stylesheet"
+        />
+        <script id="tailwind-config">
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: "#6467f2",
+                            "background-light": "#f6f6f8",
+                            "background-dark": "#101122",
+                        },
+                        fontFamily: {
+                            display: ["Inter", "sans-serif"],
+                        },
+                        borderRadius: {
+                            DEFAULT: "0.25rem",
+                            lg: "0.5rem",
+                            xl: "0.75rem",
+                            full: "9999px",
+                        },
+                    },
+                },
+            };
+        </script>
+        <style>
+            body {
+                font-family: "Inter", "Noto Sans JP", sans-serif;
+            }
+            .material-symbols-outlined {
+                font-variation-settings:
+                    "FILL" 0,
+                    "wght" 400,
+                    "GRAD" 0,
+                    "opsz" 24;
+            }
+        </style>
+    </head>
+    <body
+        class="bg-background-light dark:bg-background-dark min-h-screen text-slate-900 dark:text-slate-100 font-display"
+    >
+        <div class="layout-container flex h-full grow flex-col">
+            <!-- Header Section -->
+            <header
+                class="navbar bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-10 lg:px-40 py-3 sticky top-0 z-50"
+            >
+                <div class="flex-1 flex items-center gap-3">
+                    <div class="bg-primary p-2 rounded-lg text-white">
+                        <span class="material-symbols-outlined block" style=""
+                            >task_alt</span
+                        >
+                    </div>
+                    <h2
+                        class="text-xl font-bold tracking-tight text-slate-900 dark:text-white"
+                        style=""
+                    >
+                        Laravel TODOアプリ
+                    </h2>
+                </div>
+                <div class="flex-none gap-6">
+                    <nav class="hidden md:flex items-center gap-8 mr-4">
+                        <a
+                            class="text-sm font-semibold hover:text-primary transition-colors"
+                            href="#"
+                            style=""
+                            >aaa</a
+                        >
+                        <a
+                            class="text-sm font-semibold hover:text-primary transition-colors"
+                            href="#"
+                            style=""
+                            >aa</a
+                        >
+                        <a
+                            class="text-sm font-semibold hover:text-primary transition-colors"
+                            href="#"
+                            style=""
+                            >Settings</a
+                        >
+                    </nav>
+                    <div class="dropdown dropdown-end">
+                        <div
+                            class="btn btn-ghost btn-circle avatar"
+                            role="button"
+                            tabindex="0"
+                        >
+                            <div
+                                class="w-10 rounded-full border border-slate-200"
+                            >
+                                <img
+                                    data-alt="User profile avatar portrait"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7UrRo92kqtvW-uM0ddxjJ_-wV-HxtonLqSeHILEBRN3jBvKynqW1-_-W3Q4LLIezPMZpIIKl84p3QEyCP4q-JhqzgwKrqg7kQBd0OYntmE207LXd8Nx4DG7_cXgdglHl-tauOrx9v4_BYrEf4537zm_NihldLPg4kAleFFeL4Vf6S6QbmdCNwZHh39tUFauiALFLu_NH-ea5WRYiuLxTy6zPNdBou6iURsC7Pec1hKaTNz4RtimZ7LTz_bEpa8cRB1Gl4lWghjBJG"
+                                    class=""
+                                    style=""
+                                />
+                            </div>
+                        </div>
+                        <ul
+                            class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
+                            tabindex="0"
+                        >
+                            <li class="" style="">
+                                <a class="" style="">Profile</a>
+                            </li>
+                            <li class="" style="">
+                                <a class="" style="">Logout</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 flex justify-center py-8 px-4 sm:px-10">
+                <div class="max-w-[800px] w-full flex flex-col gap-8">
+                    <!-- Title & Welcome -->
+                    <div class="flex flex-col gap-1">
+                        <h1
+                            class="text-4xl font-black tracking-tight text-slate-900 dark:text-white"
+                            style=""
+                        >
+                            タスク一覧
+                        </h1>
+                        <p class="text-slate-500 dark:text-slate-400" style="">
+                            今日の予定を確認して、効率的に進めましょう
+                        </p>
+                    </div>
+                    <!-- Input Form Card -->
+                    <div
+                        class="card bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800"
+                    >
+                        <div class="card-body p-6">
+                            <h3 class="text-lg font-bold mb-4" style="">
+                                新しいタスクを追加
+                            </h3>
+                            <form class="flex flex-col md:flex-row gap-3">
+                                <div class="flex-1">
+                                    <input
+                                        class="input input-bordered w-full focus:border-primary focus:outline-none bg-slate-50 dark:bg-slate-800"
+                                        placeholder="何をする必要がありますか？"
+                                        type="text"
+                                    />
+                                </div>
+                                <div class="w-full md:w-auto">
+                                    <button
+                                        class="btn bg-primary hover:bg-primary/90 text-white border-none w-full md:min-w-[120px]"
+                                        style=""
+                                    >
+                                        <span
+                                            class="material-symbols-outlined mr-1"
+                                            style=""
+                                            >add</span
+                                        >
+                                        追加
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Tabs & Filters -->
+                    <div
+                        class="tabs tabs-bordered flex items-center gap-1 border-b border-slate-200 dark:border-slate-800"
+                    >
+                        <button
+                            class="tab tab-active !border-primary text-primary font-bold px-6 h-12"
+                            style=""
+                        >
+                            すべて
+                        </button>
+                        <button
+                            class="tab text-slate-500 font-medium px-6 h-12"
+                            style=""
+                        >
+                            未完了
+                        </button>
+                        <button
+                            class="tab text-slate-500 font-medium px-6 h-12"
+                            style=""
+                        >
+                            完了済み
+                        </button>
+                    </div>
+                    <!-- Task List -->
+                    <div class="flex flex-col gap-3">
+                        <!-- Task Item 1: Active -->
+                        <div
+                            class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow group"
+                        >
+                            <div
+                                class="card-body p-4 flex-row items-center gap-4"
+                            >
+                                <div class="form-control">
+                                    <label
+                                        class="cursor-pointer label"
+                                        style=""
+                                    >
+                                        <input
+                                            class="checkbox checkbox-primary rounded-md border-2"
+                                            type="checkbox"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="flex-1">
+                                    <p
+                                        class="text-slate-900 dark:text-slate-100 font-medium"
+                                        style=""
+                                    >
+                                        プロジェクトの要件定義書を作成する
+                                    </p>
+                                    <span
+                                        class="text-xs text-slate-400"
+                                        style=""
+                                        >今日 17:00まで</span
+                                    >
+                                </div>
+                                <div
+                                    class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <button
+                                        class="btn btn-ghost btn-sm btn-square text-slate-400 hover:text-primary"
+                                        style=""
+                                    >
+                                        <span
+                                            class="material-symbols-outlined"
+                                            style=""
+                                            >edit</span
+                                        >
+                                    </button>
+                                    <button
+                                        class="btn btn-ghost btn-sm btn-square text-slate-400 hover:text-red-500"
+                                        style=""
+                                    >
+                                        <span
+                                            class="material-symbols-outlined"
+                                            style=""
+                                            >delete</span
+                                        >
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Task Item 2: Active -->
+                        <div
+                            class="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow group"
+                        >
+                            <div
+                                class="card-body p-4 flex-row items-center gap-4"
+                            >
+                                <div class="form-control">
+                                    <label
+                                        class="cursor-pointer label"
+                                        style=""
+                                    >
+                                        <input
+                                            class="checkbox checkbox-primary rounded-md border-2"
+                                            type="checkbox"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="flex-1">
+                                    <p
+                                        class="text-slate-900 dark:text-slate-100 font-medium"
+                                        style=""
+                                    >
+                                        チームミーティングの議事録共有
+                                    </p>
+                                    <span
+                                        class="text-xs text-slate-400"
+                                        style=""
+                                        >明日 10:00</span
+                                    >
+                                </div>
+                                <div
+                                    class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <button
+                                        class="btn btn-ghost btn-sm btn-square text-slate-400 hover:text-primary"
+                                        style=""
+                                    >
+                                        <span
+                                            class="material-symbols-outlined"
+                                            style=""
+                                            >edit</span
+                                        >
+                                    </button>
+                                    <button
+                                        class="btn btn-ghost btn-sm btn-square text-slate-400 hover:text-red-500"
+                                        style=""
+                                    >
+                                        <span
+                                            class="material-symbols-outlined"
+                                            style=""
+                                            >delete</span
+                                        >
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Task Item 3: Completed -->
+                        <div
+                            class="card bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 group"
+                        >
+                            <div
+                                class="card-body p-4 flex-row items-center gap-4"
+                            >
+                                <div class="form-control">
+                                    <label
+                                        class="cursor-pointer label"
+                                        style=""
+                                    >
+                                        <input
+                                            checked=""
+                                            class="checkbox checkbox-primary rounded-md border-2 opacity-50"
+                                            type="checkbox"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="flex-1">
+                                    <p
+                                        class="text-slate-400 dark:text-slate-500 font-medium line-through"
+                                        style=""
+                                    >
+                                        Laravel 11のドキュメントを確認する
+                                    </p>
+                                    <div
+                                        class="badge badge-sm bg-slate-200 dark:bg-slate-800 text-slate-500 border-none mt-1"
+                                        style=""
+                                    >
+                                        完了
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button
+                                        class="btn btn-ghost btn-sm btn-square text-slate-400 hover:text-red-500"
+                                        style=""
+                                    >
+                                        <span
+                                            class="material-symbols-outlined"
+                                            style=""
+                                            >delete</span
+                                        >
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Task Item 4: Completed -->
+                        <div
+                            class="card bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 group"
+                        >
+                            <div
+                                class="card-body p-4 flex-row items-center gap-4"
+                            >
+                                <div class="form-control">
+                                    <label
+                                        class="cursor-pointer label"
+                                        style=""
+                                    >
+                                        <input
+                                            checked=""
+                                            class="checkbox checkbox-primary rounded-md border-2 opacity-50"
+                                            type="checkbox"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="flex-1">
+                                    <p
+                                        class="text-slate-400 dark:text-slate-500 font-medium line-through"
+                                        style=""
+                                    >
+                                        デプロイ環境のセットアップ
+                                    </p>
+                                    <div
+                                        class="badge badge-sm bg-slate-200 dark:bg-slate-800 text-slate-500 border-none mt-1"
+                                        style=""
+                                    >
+                                        完了
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button
+                                        class="btn btn-ghost btn-sm btn-square text-slate-400 hover:text-red-500"
+                                        style=""
+                                    >
+                                        <span
+                                            class="material-symbols-outlined"
+                                            style=""
+                                            >delete</span
+                                        >
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Floating Stat (Optional) -->
+                    <div
+                        class="flex justify-between items-center bg-primary/10 p-4 rounded-xl border border-primary/20 mt-4"
+                    >
+                        <div class="flex gap-4">
+                            <div class="text-sm">
+                                <span class="font-bold text-primary" style=""
+                                    >2</span
+                                >
+                                <span class="text-slate-500" style=""
+                                    >未完了</span
+                                >
+                            </div>
+                            <div
+                                class="text-sm border-l border-primary/30 pl-4"
+                            >
+                                <span
+                                    class="font-bold text-slate-700 dark:text-slate-300"
+                                    style=""
+                                    >2</span
+                                >
+                                <span class="text-slate-500" style=""
+                                    >完了済み</span
+                                >
+                            </div>
+                        </div>
+                        <button
+                            class="btn btn-ghost btn-sm text-primary hover:bg-primary/20 normal-case"
+                            style=""
+                        >
+                            完了済みをすべて削除
+                        </button>
+                    </div>
+                </div>
+            </main>
+            <!-- Footer -->
+            <footer class="footer footer-center p-10 text-slate-500 mt-auto">
+                <aside>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="material-symbols-outlined text-primary"
+                            style=""
+                            >task_alt</span
+                        >
+                        <p class="font-bold" style="">Laravel TODO App Ltd.</p>
+                    </div>
+                    <p class="" style="">
+                        Copyright © 2026 - All right reserved
+                    </p>
+                </aside>
+            </footer>
+        </div>
+    </body>
+</html>
